@@ -1,0 +1,23 @@
+{
+  "name": "devtinder",
+  "version": "1.0.0",
+  "description": "This is tinder for developers",
+  "main": "index.js",
+  "scripts": {
+    "test": "node src/app.js",
+    "start": "nodemon src/app.js"
+  },
+  "keywords": [
+    "JavaScript",
+    "Node.js",
+    "Express.js",
+    "Backend",
+    "Development"
+  ],
+  "author": "Amit Madeli",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^5.1.0",
+    "nodemon": "^3.1.10"
+  }
+}
