@@ -1,25 +1,74 @@
 const mongoose = require("mongoose");
+const validator = require("validator");
+
+//performing schema level checks to avoid pollution
 
 const userSchema = new mongoose.Schema({
     firstName : {
-        type : String
+        type : String,
+        required : true,
+        minLength : 4,
+        maxLength : 20
     },
     lastName : {
-        type : String
+        type : String,
+        required : true,
+        minLength : 3,
+        maxLength : 20
     },
     age : {
-        type : Number
+        type : Number,
+        min : 18,
+        max : 120
     },
-    emailId : {
-        type : String
+    emailId: {
+    type: String,
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    validate(value) {
+        if (!validator.isEmail(value)) {
+            throw new Error("Invalid Email Address: " + value);
+            }
+        }
     },
     password : {
-        type : String
+        type : String,
+        required : true,
+        validate(value){
+            if(!validator.isStrongPassword(value)){
+                throw new Error("Password must be Strong"+value);
+            }
+        }
+        
     },
     gender : {
-        type : String
+        type : String,
+        require : true,
+        validate(value){   //customer vaidation fucntion
+            if(!["male","female","other"].includes(value)){
+                throw new Error("Gender is Invalid");
+            }
+        }
+    },
+    bio : {
+        type : String,
+        default : "This is a default Bio for the user"
+    },
+    photoURL : {
+        type : String,
+        default : "https://www.pngitem.com/pimgs/m/35-350426_profile-icon-png-default-profile-picture-png-transparent.png",
+        validate(value){
+            if(!validator.isURL(value)){
+                throw new Error("URL is Invalid"+value)
+            }
+        }
+    },
+    skill : {
+        type : [String]
     }
-})
+},{timestamps : true})
 
 const User = mongoose.model("User",userSchema);
 module.exports = User;

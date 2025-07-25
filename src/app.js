@@ -3,26 +3,20 @@ const connectDB = require("./config/database");
 const User = require("./models/user");
 const app = express();
 
-app.use(express.json());
+app.use(express.json()); //coverting JSON objects to JavaScript Objects by express method
 
 //API level 
 //sending to the database
-app.post("/signup",(req,res) => {
-    const user = new User({
-        firstName: "Anwesha",
-        lastName: "Mahapatra",
-        age:24,
-        emailId:"anwesha@gmail.com",
-        password:"anwesha@123",
-        gender:"female"
-    });
+app.post("/signup",async (req,res) => {
+    const userDetails = req.body;
+    const user = new User(userDetails);
 
     try{
-        user.save();
+        await user.save();
         res.send("User Saved Succesfully");
     }
     catch(err){
-        res.status(500).send("Something Went Wrong !")
+        res.status(400).send("Unable to Save. Invalid Input from the User: "+err)
     }
 })
 
@@ -52,20 +46,31 @@ app.delete("/user",async (req,res)=>{
 
 
 //editing the database
-app.patch("/user",async(req,res)=>{
-    const userId = req.body._id;
+app.patch("/signup/:_id",async (req,res)=>{
+    const userId = req.params?._id;
+    const userData = req.body;
+    //console.log(userData);
+
     try{
-        const user = await User.findByIdAndUpdate(userId,{emailId: "amitmadeli09@gmail.com",age: 24});
-        if(!user){
-            res.status(500).send("Something went wrong !");
-        }else{
-            res.send("User Updated Successfully");
-            console.log(user);
+        const ALLOWED_UPDATES=["age","password","bio","photoURL","skill"]; // we are selecting keys
+        const isUpdateAllowed = Object.keys(userData).every((key)=>
+            ALLOWED_UPDATES.includes(key)
+        );
+
+        if(!isUpdateAllowed){
+            throw new Error("Update Not Allowed");
         }
+        if(userData?.skill.length > 5){
+            throw new Error("Must have 5 Skills");
+        }
+        const user = await User.findByIdAndUpdate({_id:userId},userData,{returnDocument : "after",runValidators:true});
+        res.send("User Details Successfully");
+        console.log(user);
     }catch(err){
-        res.status(404).send("User Not Found");
+        res.status(400).send("UPDATE FAILED:"+err.message);
     }
 })
+    
 
 connectDB()
     .then(() =>{
