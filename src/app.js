@@ -1,22 +1,51 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+const userValidateSignup = require("./util/validations");
+const bcrypt = require("bcrypt");
+
 const app = express();
 
 app.use(express.json()); //coverting JSON objects to JavaScript Objects by express method
-
 //API level 
 //sending to the database
 app.post("/signup",async (req,res) => {
-    const userDetails = req.body;
-    const user = new User(userDetails);
-
+    
     try{
+        //1st Step : Validate the user
+        userValidateSignup(req);
+
+        const {firstName,lastName,emailId,password} = req.body;
+        //2nd Step : Encrypt the password
+        const passwordHash = await bcrypt.hash(password,10);
+        //console.log(passwordHash);
+        const user = new User({firstName,lastName,emailId,password:passwordHash});
+        
+        //Step 3 : Register the User
         await user.save();
         res.send("User Saved Succesfully");
     }
     catch(err){
         res.status(400).send("Unable to Save. Invalid Input from the User: "+err)
+    }
+});
+
+app.post("/login",async (req,res)=>{
+    try{
+        const {emailId,password} = req.body;
+        const user = await User.findOne({emailId : emailId});
+        if(!user){
+            throw new Error("Invalid Credentials");
+        }
+        const isPasswordValid = await bcrypt.compare(password,user.password)
+        if(isPasswordValid){
+            res.send("Login Successful");
+        }else{
+            throw new Error("Invalid Credentials");
+        }
+
+    }catch(err){
+        res.status(400).send("Error: "+err.message);
     }
 })
 
